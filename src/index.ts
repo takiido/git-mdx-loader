@@ -3,6 +3,8 @@ export type {
   GitHubMarkdownArticleSummary,
   GitHubMarkdownSourceOptions,
   MarkdownArticle,
+  MarkdownArticleMetaProps,
+  MarkdownArticleViewProps,
   MarkdownRendererProps,
 } from "./types.js";
 

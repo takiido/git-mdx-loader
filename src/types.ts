@@ -1,4 +1,5 @@
 import type { Components } from "react-markdown";
+import type { ReactNode } from "react";
 
 export interface FrontmatterData {
   [key: string]: unknown;
@@ -38,4 +39,16 @@ export interface MarkdownRendererProps {
   content: string;
   components?: Components;
   className?: string;
+}
+
+export interface MarkdownArticleMetaProps<TFrontmatter extends FrontmatterData = FrontmatterData> {
+  article: MarkdownArticle<TFrontmatter>;
+  frontmatter: TFrontmatter;
+}
+
+export interface MarkdownArticleViewProps<TFrontmatter extends FrontmatterData = FrontmatterData> {
+  article: MarkdownArticle<TFrontmatter>;
+  components?: Components;
+  className?: string;
+  renderMeta?: (props: MarkdownArticleMetaProps<TFrontmatter>) => ReactNode;
 }

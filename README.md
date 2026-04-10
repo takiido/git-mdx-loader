@@ -100,6 +100,8 @@ Low-level renderer for markdown content.
 
 Renders a parsed article object.
 
+Supports a `renderMeta` prop for custom metadata layouts like title, date, and tags.
+
 ### `parseMarkdown(source, slug, path, filename)`
 
 Parses markdown and frontmatter into the internal article shape.
