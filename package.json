@@ -1,6 +1,6 @@
 {
   "name": "git-mdx-loader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "load markdown posts from a git repo and render them as react / next.js components",
   "type": "module",
   "main": "./dist/index.js",
