@@ -2,7 +2,7 @@
 
 Load markdown articles from a GitHub repo and render them in React / Next.js.
 
-## v0.1.0
+## v0.1.1
 
 This first version supports:
 
@@ -10,6 +10,7 @@ This first version supports:
 - `.md` files only
 - frontmatter parsing with `gray-matter`
 - React rendering with `react-markdown`
+- custom metadata rendering with `renderMeta`
 
 ## Usage
 
@@ -52,6 +53,25 @@ import { MarkdownArticleView } from "git-mdx-loader";
 export default function ArticlePage() {
   return <MarkdownArticleView article={article} />;
 }
+```
+
+### Custom metadata
+
+```tsx
+<MarkdownArticleView
+  article={article}
+  renderMeta={({ frontmatter }) => (
+    <header>
+      <h1>{frontmatter.title}</h1>
+      <p>{frontmatter.date}</p>
+      <div>
+        {frontmatter.tags?.map((tag) => (
+          <span key={tag}>{tag}</span>
+        ))}
+      </div>
+    </header>
+  )}
+/>
 ```
 
 ## Frontmatter
