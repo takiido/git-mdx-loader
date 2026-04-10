@@ -1,0 +1,51 @@
+{
+  "name": "git-mdx-loader",
+  "version": "0.1.0",
+  "description": "load markdown posts from a git repo and render them as react / next.js components",
+  "type": "module",
+
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+
+  "files": [
+    "dist"
+  ],
+
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "check": "tsc --noEmit"
+  },
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/takiido/git-mdx-loader"
+  },
+
+  "keywords": [
+    "github",
+    "markdown",
+    "mdx",
+    "nextjs",
+    "react",
+    "content",
+    "posts",
+    "content-source",
+    "content-loader",
+    "typescript"
+  ],
+
+  "author": "takiido",
+  "license": "MIT",
+
+  "peerDependencies": {
+    "react": "^18 || ^19"
+  }
+}
