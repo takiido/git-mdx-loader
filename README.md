@@ -11,6 +11,7 @@ This first version supports:
 - frontmatter parsing with `gray-matter`
 - React rendering with `react-markdown`
 - custom metadata rendering with `renderMeta`
+- date display control with `dateFormat`
 
 ## Usage
 
@@ -73,6 +74,19 @@ export default function ArticlePage() {
   )}
 />
 ```
+
+### Date format
+
+```tsx
+<MarkdownArticleView article={article} dateFormat="date" />
+```
+
+Options:
+
+- `raw`: parsed `Date` value
+- `date`: exact value from the markdown file
+
+The formatted `date` value is also passed into `renderMeta`.
 
 ## Frontmatter
 

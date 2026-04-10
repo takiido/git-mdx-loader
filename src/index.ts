@@ -5,6 +5,7 @@ export type {
   MarkdownArticle,
   MarkdownArticleMetaProps,
   MarkdownArticleViewProps,
+  MarkdownDateFormat,
   MarkdownRendererProps,
 } from "./types.js";
 

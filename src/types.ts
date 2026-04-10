@@ -5,7 +5,7 @@ export interface FrontmatterData {
   [key: string]: unknown;
   title?: string;
   description?: string;
-  date?: string;
+  date?: string | Date;
   tags?: string[];
   draft?: boolean;
 }
@@ -15,6 +15,7 @@ export interface MarkdownArticle<TFrontmatter extends FrontmatterData = Frontmat
   path: string;
   filename: string;
   frontmatter: TFrontmatter;
+  rawFrontmatter: string;
   content: string;
 }
 
@@ -44,11 +45,15 @@ export interface MarkdownRendererProps {
 export interface MarkdownArticleMetaProps<TFrontmatter extends FrontmatterData = FrontmatterData> {
   article: MarkdownArticle<TFrontmatter>;
   frontmatter: TFrontmatter;
+  date?: string | Date;
 }
+
+export type MarkdownDateFormat = "raw" | "date";
 
 export interface MarkdownArticleViewProps<TFrontmatter extends FrontmatterData = FrontmatterData> {
   article: MarkdownArticle<TFrontmatter>;
   components?: Components;
   className?: string;
+  dateFormat?: MarkdownDateFormat;
   renderMeta?: (props: MarkdownArticleMetaProps<TFrontmatter>) => ReactNode;
 }
