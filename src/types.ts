@@ -16,7 +16,12 @@ export interface ArticleSummary {
   filename: string;
 }
 
+export interface Entry extends ArticleSummary {
+  content: string;
+  frontmatter: Record<string, unknown>;
+}
+
 export interface Source {
   listEntries(): Promise<ArticleSummary[]>;
-  getEntry(slug: string): Promise<string>;
+  getEntry(slug: string): Promise<Entry>;
 }

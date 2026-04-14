@@ -38,6 +38,15 @@ const article = await source.getEntry("hello-world");
 - `revalidateSeconds`: cache ttl in seconds, use `false` for forever
 - `debug`: print short server logs
 
+## entry
+
+- `slug`
+- `path`
+- `filename`
+- `content`
+- `frontmatter`
+- frontmatter parse is simple yaml-like fields only
+
 ## notes
 
 - set `cachecomponents: true` in `next.config.js`
@@ -48,7 +57,6 @@ const article = await source.getEntry("hello-world");
 
 ## debug logs
 
-- `[github-md] listArticles`
 - `[github-md] listEntries`
 - `[github-md] fetch GitHub directory`
 - `[github-md] getEntry: hello-world`
