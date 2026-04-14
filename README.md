@@ -1,147 +1,54 @@
 # git-mdx-loader
 
-Load markdown articles from a GitHub repo and render them in React / Next.js.
+cache github article list in next.js.
 
-## v0.1.1
-
-This first version supports:
-
-- GitHub repo source via the GitHub API
-- `.md` files only
-- frontmatter parsing with `gray-matter`
-- React rendering with `react-markdown`
-- custom metadata rendering with `renderMeta`
-- date display control with `dateFormat`
-
-## Usage
+## use
 
 ```ts
-import { createGitHubMarkdownSource } from "git-mdx-loader";
+import { createSource } from "git-mdx-loader";
 
-export const source = createGitHubMarkdownSource({
+const source = createSource({
   owner: "your-github-user",
   repo: "your-articles-repo",
-  ref: "main",
-  directory: "articles",
+  folder: "articles",
   token: process.env.GITHUB_TOKEN,
+  revalidateSeconds: 300,
+  debug: true,
 });
-```
 
-### List articles
-
-```ts
 const articles = await source.listArticles();
+const article = await source.getArticle("hello-world");
 ```
 
-Each item includes:
+## api
 
-- `slug`
-- `path`
-- `filename`
-- `frontmatter`
+- `createSource(options)`
+- `source.listArticles()`
+- `source.getArticle(slug)`
 
-### Load a single article
+## options
 
-```ts
-const article = await source.getArticle("my-post");
-```
-
-### Render article content
-
-```tsx
-import { MarkdownArticleView } from "git-mdx-loader";
-
-export default function ArticlePage() {
-  return <MarkdownArticleView article={article} />;
-}
-```
-
-### Custom metadata
-
-```tsx
-<MarkdownArticleView
-  article={article}
-  renderMeta={({ frontmatter }) => (
-    <header>
-      <h1>{frontmatter.title}</h1>
-      <p>{frontmatter.date}</p>
-      <div>
-        {frontmatter.tags?.map((tag) => (
-          <span key={tag}>{tag}</span>
-        ))}
-      </div>
-    </header>
-  )}
-/>
-```
-
-### Date format
-
-```tsx
-<MarkdownArticleView article={article} dateFormat="date" />
-```
-
-Options:
-
-- `raw`: parsed `Date` value
-- `date`: exact value from the markdown file
-
-The formatted `date` value is also passed into `renderMeta`.
-
-## Frontmatter
-
-Example markdown file:
-
-```md
----
-title: Hello world
-description: My first post
-date: 2026-04-10
-tags:
-  - nextjs
-  - markdown
----
-
-# Hello world
-
-This is my article.
-```
-
-## API
-
-### `createGitHubMarkdownSource(options)`
-
-Options:
-
-- `owner`: GitHub owner
-- `repo`: GitHub repository name
-- `token`: optional GitHub token for private repos
+- `owner`: github owner
+- `repo`: github repo name
+- `folder`: folder with `.md` files
+- `token`: github token for private repos
 - `ref`: branch, tag, or commit
-- `directory`: folder containing markdown files, defaults to `articles`
-- `apiBaseUrl`: optional GitHub API base URL
-- `fetch`: optional custom fetch implementation
+- `apiBaseUrl`: custom github api url
+- `fetch`: custom fetch function
+- `revalidateSeconds`: cache ttl in seconds, use `false` for forever
+- `debug`: print short server logs
 
-Returns:
+## notes
 
-- `listArticles()`
-- `getArticle(slug)`
+- set `cachecomponents: true` in `next.config.js`
+- next.js 15 and 16 app router and server components only
+- no markdown render here
+- no update, delete, or webhook
+- github list stored in next cache
 
-### `MarkdownRenderer`
+## debug logs
 
-Low-level renderer for markdown content.
-
-### `MarkdownArticleView`
-
-Renders a parsed article object.
-
-Supports a `renderMeta` prop for custom metadata layouts like title, date, and tags.
-
-### `parseMarkdown(source, slug, path, filename)`
-
-Parses markdown and frontmatter into the internal article shape.
-
-## Notes
-
-- This version is markdown only, not MDX.
-- Rendering happens on the server in Next.js.
-- For private repos, pass a GitHub token.
+- `[github-md] listArticles`
+- `[github-md] fetch GitHub directory`
+- `[github-md] getArticle: hello-world`
+- `[github-md] fetch GitHub file: hello-world.md`

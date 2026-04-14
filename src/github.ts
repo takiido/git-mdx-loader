@@ -1,121 +1,110 @@
-import type {
-  GitHubMarkdownArticleSummary,
-  GitHubMarkdownSourceOptions,
-  MarkdownArticle,
-} from "./types.js";
-import { parseMarkdown } from "./markdown.js";
+import { unstable_cache } from "next/cache";
+import type { ArticleSummary, Source, SourceOptions } from "./types.js";
 
-type GitHubDirectoryItem = {
+type GitHubItem = {
   type: string;
   path: string;
   name: string;
 };
 
+function log(debug: boolean | undefined, message: string) {
+  if (debug) console.log(`[github-md] ${message}`);
+}
+
 function resolveFetch(fetchImpl?: typeof fetch) {
-  if (fetchImpl) {
-    return fetchImpl;
-  }
-
-  if (typeof fetch === "undefined") {
-    throw new Error("Fetch is not available in this runtime.");
-  }
-
+  if (fetchImpl) return fetchImpl;
+  if (typeof fetch === "undefined") throw new Error("fetch is not available in this runtime.");
   return fetch;
 }
 
-function normalizeDirectory(directory = "articles") {
-  return directory.replace(/^\/+|\/+$/g, "");
+function cleanFolder(folder = "") {
+  return folder.replace(/^\/+|\/+$/g, "");
 }
 
-function stripExtension(path: string) {
-  return path.replace(/\.[^.\/]+$/, "");
+function slugFromPath(path: string, folder: string) {
+  const prefix = folder ? `${folder}/` : "";
+  const relative = prefix && path.startsWith(prefix) ? path.slice(prefix.length) : path;
+  return relative.replace(/\.[^.\/]+$/, "");
 }
 
-function toSlug(path: string, directory: string) {
-  const relative = path.startsWith(`${directory}/`) ? path.slice(directory.length + 1) : path;
-  return stripExtension(relative);
-}
-
-function buildApiUrl(baseUrl: string, owner: string, repo: string, path: string, ref?: string) {
-  const url = new URL(`/repos/${owner}/${repo}/contents/${path}`, baseUrl);
-  if (ref) {
-    url.searchParams.set("ref", ref);
-  }
+function apiUrl(baseUrl: string, owner: string, repo: string, path: string, ref?: string) {
+  const url = new URL(path ? `/repos/${owner}/${repo}/contents/${path}` : `/repos/${owner}/${repo}/contents`, baseUrl);
+  if (ref) url.searchParams.set("ref", ref);
   return url;
 }
 
 async function readJson<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    throw new Error(`GitHub request failed with status ${response.status}`);
-  }
-
+  if (!response.ok) throw new Error(`github request failed with status ${response.status}`);
   return (await response.json()) as T;
 }
 
-async function readText(response: Response): Promise<string> {
-  if (!response.ok) {
-    throw new Error(`GitHub request failed with status ${response.status}`);
-  }
-
-  return await response.text();
-}
-
-export function createGitHubMarkdownSource(options: GitHubMarkdownSourceOptions) {
+export function createSource(options: SourceOptions): Source {
   const fetchImpl = resolveFetch(options.fetch);
-  const apiBaseUrl = options.apiBaseUrl ?? "https://api.github.com";
-  const directory = normalizeDirectory(options.directory);
+  const folder = cleanFolder(options.folder);
+  const baseUrl = options.apiBaseUrl ?? "https://api.github.com";
+  const revalidate = options.revalidateSeconds ?? 300;
+  const debug = options.debug ?? false;
 
-  const jsonHeaders: Record<string, string> = {
+  const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
   };
 
-  const rawHeaders: Record<string, string> = {
-    Accept: "application/vnd.github.raw",
-    "X-GitHub-Api-Version": "2022-11-28",
-  };
+  if (options.token) headers.Authorization = `Bearer ${options.token}`;
 
-  if (options.token) {
-    jsonHeaders.Authorization = `Bearer ${options.token}`;
-    rawHeaders.Authorization = `Bearer ${options.token}`;
+  function cacheOptions() {
+    return revalidate === false ? undefined : { revalidate };
   }
 
-  async function loadArticleByPath<TFrontmatter extends Record<string, unknown> = Record<string, unknown>>(
-    path: string,
-  ): Promise<MarkdownArticle<TFrontmatter>> {
-    const url = buildApiUrl(apiBaseUrl, options.owner, options.repo, path, options.ref);
-    const response = await fetchImpl(url, { headers: rawHeaders });
-    const source = await readText(response);
-    const slug = toSlug(path, directory);
+  async function loadList(): Promise<ArticleSummary[]> {
+    log(debug, "listArticles");
 
-    return parseMarkdown<TFrontmatter>(source, slug, path, path.split("/").pop() ?? path);
-  }
-
-  async function listArticles(): Promise<GitHubMarkdownArticleSummary[]> {
-    const url = buildApiUrl(apiBaseUrl, options.owner, options.repo, directory, options.ref);
-    const response = await fetchImpl(url, { headers: jsonHeaders });
-    const data = await readJson<GitHubDirectoryItem | GitHubDirectoryItem[]>(response);
+    const url = apiUrl(baseUrl, options.owner, options.repo, folder, options.ref);
+    const response = await fetchImpl(url, { headers });
+    const data = await readJson<GitHubItem | GitHubItem[]>(response);
     const items = Array.isArray(data) ? data : [data];
 
-    const articles = await Promise.all(
-      items.filter((item) => item.type === "file" && item.name.endsWith(".md")).map((item) => loadArticleByPath(item.path)),
-    );
+    log(debug, "fetch GitHub directory");
 
-    return articles.map((article) => ({
-      slug: article.slug,
-      path: article.path,
-      filename: article.filename,
-      frontmatter: article.frontmatter,
-    }));
+    return items
+      .filter((item) => item.type === "file" && item.name.endsWith(".md"))
+      .map((item) => ({
+        slug: slugFromPath(item.path, folder),
+        path: item.path,
+        filename: item.name,
+      }));
   }
 
-  async function getArticle<TFrontmatter extends Record<string, unknown> = Record<string, unknown>>(
-    slug: string,
-  ): Promise<MarkdownArticle<TFrontmatter>> {
-    const normalizedSlug = slug.replace(/^\/+/, "").replace(/\.(md)$/, "");
-    const articlePath = `${directory}/${normalizedSlug}.md`;
-    return loadArticleByPath<TFrontmatter>(articlePath);
+  const cacheKey = ["github-md", options.owner, options.repo, folder, options.ref ?? ""].join(":");
+  const cachedList =
+    revalidate === 0
+      ? loadList
+      : unstable_cache(loadList, [cacheKey, String(revalidate)], cacheOptions());
+
+  async function loadArticle(slug: string): Promise<string> {
+    const cleanSlug = slug.replace(/^\/+/, "").replace(/\.(md)$/, "");
+    const path = folder ? `${folder}/${cleanSlug}.md` : `${cleanSlug}.md`;
+
+    log(debug, `getArticle: ${cleanSlug}`);
+
+    return revalidate === 0
+      ? fetchArticle(path, cleanSlug)
+      : unstable_cache(() => fetchArticle(path, cleanSlug), [cacheKey, cleanSlug, String(revalidate)], cacheOptions())();
   }
 
-  return { listArticles, getArticle };
+  async function fetchArticle(path: string, cleanSlug: string) {
+    log(debug, `fetch GitHub file: ${path.split("/").pop() ?? path}`);
+    const url = apiUrl(baseUrl, options.owner, options.repo, path, options.ref);
+    const response = await fetchImpl(url, { headers });
+    return await response.text();
+  }
+
+  return {
+    listArticles() {
+      return cachedList();
+    },
+    getArticle(slug: string) {
+      return loadArticle(slug);
+    },
+  };
 }
