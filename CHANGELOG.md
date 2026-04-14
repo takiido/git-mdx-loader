@@ -1,5 +1,9 @@
 # changelog
 
+## 0.4.0
+
+- this update doesn't mean anything. just bumping version for easier development
+
 ## 0.3.9
 
 - load raw markdown for `getEntry(slug)`
