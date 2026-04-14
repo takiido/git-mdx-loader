@@ -16,15 +16,15 @@ const source = createSource({
   debug: true,
 });
 
-const articles = await source.listArticles();
-const article = await source.getArticle("hello-world");
+const articles = await source.listEntries();
+const article = await source.getEntry("hello-world");
 ```
 
 ## api
 
 - `createSource(options)`
-- `source.listArticles()`
-- `source.getArticle(slug)`
+- `source.listEntries()`
+- `source.getEntry(slug)`
 
 ## options
 
@@ -49,6 +49,9 @@ const article = await source.getArticle("hello-world");
 ## debug logs
 
 - `[github-md] listArticles`
+- `[github-md] listEntries`
 - `[github-md] fetch GitHub directory`
-- `[github-md] getArticle: hello-world`
+- `[github-md] getEntry: hello-world`
 - `[github-md] fetch GitHub file: hello-world.md`
+- `[github-md] source unavailable: listEntries`
+- `[github-md] source unavailable: hello-world.md`

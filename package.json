@@ -1,6 +1,6 @@
 {
   "name": "git-mdx-loader",
-  "version": "0.3.3",
+  "version": "0.3.5",
   "description": "cache github article lists in next.js",
   "type": "module",
   "main": "./dist/index.js",

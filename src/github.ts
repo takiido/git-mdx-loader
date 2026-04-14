@@ -11,6 +11,10 @@ function log(debug: boolean | undefined, message: string) {
   if (debug) console.log(`[github-md] ${message}`);
 }
 
+function warn(debug: boolean | undefined, message: string) {
+  if (debug) console.warn(`[github-md] ${message}`);
+}
+
 function resolveFetch(fetchImpl?: typeof fetch) {
   if (fetchImpl) return fetchImpl;
   if (typeof fetch === "undefined") throw new Error("fetch is not available in this runtime.");
@@ -57,22 +61,26 @@ export function createSource(options: SourceOptions): Source {
   }
 
   async function loadList(): Promise<ArticleSummary[]> {
-    log(debug, "listArticles");
+    log(debug, "listEntries");
 
-    const url = apiUrl(baseUrl, options.owner, options.repo, folder, options.ref);
-    const response = await fetchImpl(url, { headers });
-    const data = await readJson<GitHubItem | GitHubItem[]>(response);
-    const items = Array.isArray(data) ? data : [data];
+    try {
+      const url = apiUrl(baseUrl, options.owner, options.repo, folder, options.ref);
+      log(debug, "fetch GitHub directory");
+      const response = await fetchImpl(url, { headers });
+      const data = await readJson<GitHubItem | GitHubItem[]>(response);
+      const items = Array.isArray(data) ? data : [data];
 
-    log(debug, "fetch GitHub directory");
-
-    return items
-      .filter((item) => item.type === "file" && item.name.endsWith(".md"))
-      .map((item) => ({
-        slug: slugFromPath(item.path, folder),
-        path: item.path,
-        filename: item.name,
-      }));
+      return items
+        .filter((item) => item.type === "file" && item.name.endsWith(".md"))
+        .map((item) => ({
+          slug: slugFromPath(item.path, folder),
+          path: item.path,
+          filename: item.name,
+        }));
+    } catch {
+      warn(debug, "source unavailable: listEntries");
+      return [];
+    }
   }
 
   const cacheKey = ["github-md", options.owner, options.repo, folder, options.ref ?? ""].join(":");
@@ -85,25 +93,30 @@ export function createSource(options: SourceOptions): Source {
     const cleanSlug = slug.replace(/^\/+/, "").replace(/\.(md)$/, "");
     const path = folder ? `${folder}/${cleanSlug}.md` : `${cleanSlug}.md`;
 
-    log(debug, `getArticle: ${cleanSlug}`);
+    log(debug, `getEntry: ${cleanSlug}`);
 
     return revalidate === 0
-      ? fetchArticle(path, cleanSlug)
-      : unstable_cache(() => fetchArticle(path, cleanSlug), [cacheKey, cleanSlug, String(revalidate)], cacheOptions())();
+      ? fetchArticle(path)
+      : unstable_cache(() => fetchArticle(path), [cacheKey, cleanSlug, String(revalidate)], cacheOptions())();
   }
 
-  async function fetchArticle(path: string, cleanSlug: string) {
-    log(debug, `fetch GitHub file: ${path.split("/").pop() ?? path}`);
-    const url = apiUrl(baseUrl, options.owner, options.repo, path, options.ref);
-    const response = await fetchImpl(url, { headers });
-    return await response.text();
+  async function fetchArticle(path: string) {
+    try {
+      log(debug, `fetch GitHub file: ${path.split("/").pop() ?? path}`);
+      const url = apiUrl(baseUrl, options.owner, options.repo, path, options.ref);
+      const response = await fetchImpl(url, { headers });
+      return await response.text();
+    } catch {
+      warn(debug, `source unavailable: ${path.split("/").pop() ?? path}`);
+      return "";
+    }
   }
 
   return {
-    listArticles() {
+    listEntries() {
       return cachedList();
     },
-    getArticle(slug: string) {
+    getEntry(slug: string) {
       return loadArticle(slug);
     },
   };

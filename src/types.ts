@@ -17,6 +17,6 @@ export interface ArticleSummary {
 }
 
 export interface Source {
-  listArticles(): Promise<ArticleSummary[]>;
-  getArticle(slug: string): Promise<string>;
+  listEntries(): Promise<ArticleSummary[]>;
+  getEntry(slug: string): Promise<string>;
 }
