@@ -1,5 +1,9 @@
 # changelog
 
+## 0.4.1
+
+- add `RenderContent` for markdown render
+
 ## 0.4.0
 
 - this update doesn't mean anything. just bumping version for easier development

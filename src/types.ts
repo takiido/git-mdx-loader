@@ -1,3 +1,5 @@
+import type { Components } from "react-markdown";
+
 export interface SourceOptions {
   owner: string;
   repo: string;
@@ -19,6 +21,12 @@ export interface ArticleSummary {
 export interface Entry extends ArticleSummary {
   content: string;
   frontmatter: Record<string, unknown>;
+}
+
+export interface RenderContentProps {
+  content: string;
+  components?: Components;
+  className?: string;
 }
 
 export interface Source {

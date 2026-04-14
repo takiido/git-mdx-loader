@@ -25,6 +25,7 @@ const article = await source.getEntry("hello-world");
 - `createSource(options)`
 - `source.listEntries()`
 - `source.getEntry(slug)`
+- `RenderContent`
 
 ## options
 
@@ -46,6 +47,14 @@ const article = await source.getEntry("hello-world");
 - `content`
 - `frontmatter`
 - frontmatter parse is simple yaml-like fields only
+
+## render
+
+```tsx
+import { RenderContent } from "git-mdx-loader";
+
+<RenderContent content={entry.content} />
+```
 
 ## notes
 
