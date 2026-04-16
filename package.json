@@ -50,5 +50,8 @@
   "peerDependencies": {
     "next": "^15.0.0 || ^16.0.0",
     "react": "^18 || ^19"
+  },
+  "dependencies": {
+    "remark-gfm": "^4.0.1"
   }
 }
