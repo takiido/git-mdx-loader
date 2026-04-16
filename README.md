@@ -12,12 +12,14 @@ const source = createSource({
   repo: "your-articles-repo",
   folder: "articles",
   token: process.env.GITHUB_TOKEN,
+  cache: "force-cache",
   revalidateSeconds: 300,
   debug: true,
 });
 
 const articles = await source.listEntries();
 const article = await source.getEntry("hello-world");
+const article2 = await source.getEntry("hello-world", { cache: "no-store" });
 ```
 
 ## api
@@ -36,8 +38,14 @@ const article = await source.getEntry("hello-world");
 - `ref`: branch, tag, or commit
 - `apiBaseUrl`: custom github api url
 - `fetch`: custom fetch function
+- `cache`: default cache mode
 - `revalidateSeconds`: cache ttl in seconds, use `false` for forever
 - `debug`: print short server logs
+
+## request options
+
+- `cache`: override cache mode per call
+- `revalidateSeconds`: override revalidate per call
 
 ## entry
 
@@ -67,8 +75,9 @@ import { RenderContent } from "git-mdx-loader";
 ## debug logs
 
 - `[github-md] listEntries`
+- `[github-md] listEntries cache=force-cache revalidate=3600`
 - `[github-md] fetch GitHub directory`
-- `[github-md] getEntry: hello-world`
+- `[github-md] getEntry:hello-world cache=no-store`
 - `[github-md] fetch GitHub file: hello-world.md`
 - `[github-md] source unavailable: listEntries`
 - `[github-md] source unavailable: hello-world.md`
