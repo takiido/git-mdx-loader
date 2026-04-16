@@ -1,12 +1,5 @@
 import type { Components } from "react-markdown";
 
-export type CacheMode = "default" | "force-cache" | "no-store";
-
-export interface RequestOptions {
-  cache?: CacheMode;
-  revalidateSeconds?: number | false;
-}
-
 export interface SourceOptions {
   owner: string;
   repo: string;
@@ -15,7 +8,6 @@ export interface SourceOptions {
   ref?: string;
   apiBaseUrl?: string;
   fetch?: typeof fetch;
-  cache?: CacheMode;
   revalidateSeconds?: number | false;
   debug?: boolean;
 }
@@ -38,6 +30,6 @@ export interface RenderContentProps {
 }
 
 export interface Source {
-  listEntries(options?: RequestOptions): Promise<ArticleSummary[]>;
-  getEntry(slug: string, options?: RequestOptions): Promise<Entry>;
+  listEntries(): Promise<ArticleSummary[]>;
+  getEntry(slug: string): Promise<Entry>;
 }
