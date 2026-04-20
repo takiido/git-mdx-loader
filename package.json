@@ -58,6 +58,7 @@
     "rehype-math": "^0.2.0",
     "remark-gfm": "^4.0.1",
     "remark-highlight": "^0.1.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "unified": "^11.0.5"
   }
 }

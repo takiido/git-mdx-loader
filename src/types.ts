@@ -1,4 +1,5 @@
 import type { Components } from "react-markdown";
+import type { PluggableList } from "unified";
 
 export interface SourceOptions {
   owner: string;
@@ -16,6 +17,7 @@ export interface ArticleSummary {
   slug: string;
   path: string;
   filename: string;
+  createdAt: string | null;
 }
 
 export interface Entry extends ArticleSummary {
@@ -23,10 +25,16 @@ export interface Entry extends ArticleSummary {
   frontmatter: Record<string, unknown>;
 }
 
+export interface RenderPlugins {
+  remarkPlugins: PluggableList;
+  rehypePlugins: PluggableList;
+}
+
 export interface RenderContentProps {
   content: string;
   components?: Components;
   className?: string;
+  plugins?: RenderPlugins;
 }
 
 export interface Source {

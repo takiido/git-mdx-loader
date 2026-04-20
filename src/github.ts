@@ -7,6 +7,14 @@ type GitHubItem = {
   name: string;
 };
 
+type GitHubCommit = {
+  commit?: {
+    author?: {
+      date?: string;
+    };
+  };
+};
+
 function log(debug: boolean | undefined, message: string) {
   if (debug) console.log(`[github-md] ${message}`);
 }
@@ -34,6 +42,14 @@ function slugFromPath(path: string, folder: string) {
 function apiUrl(baseUrl: string, owner: string, repo: string, path: string, ref?: string) {
   const url = new URL(path ? `/repos/${owner}/${repo}/contents/${path}` : `/repos/${owner}/${repo}/contents`, baseUrl);
   if (ref) url.searchParams.set("ref", ref);
+  return url;
+}
+
+function commitsUrl(baseUrl: string, owner: string, repo: string, path: string, ref?: string) {
+  const url = new URL(`/repos/${owner}/${repo}/commits`, baseUrl);
+  url.searchParams.set("path", path);
+  url.searchParams.set("per_page", "100");
+  if (ref) url.searchParams.set("sha", ref);
   return url;
 }
 
@@ -97,6 +113,11 @@ async function readJson<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+async function readJsonArray<T>(response: Response): Promise<T[]> {
+  if (!response.ok) throw new Error(`github request failed with status ${response.status}`);
+  return (await response.json()) as T[];
+}
+
 async function readText(response: Response): Promise<string> {
   if (!response.ok) throw new Error(`github request failed with status ${response.status}`);
   return await response.text();
@@ -137,13 +158,20 @@ export function createSource(options: SourceOptions): Source {
       const data = await readJson<GitHubItem | GitHubItem[]>(response);
       const items = Array.isArray(data) ? data : [data];
 
-      return items
-        .filter((item) => item.type === "file" && item.name.endsWith(".md"))
-        .map((item) => ({
-          slug: slugFromPath(item.path, folder),
-          path: item.path,
-          filename: item.name,
-        }));
+      return Promise.all(
+        items
+          .filter((item) => item.type === "file" && item.name.endsWith(".md"))
+          .map(async (item) => {
+            const dates = await fetchDates(item.path);
+
+            return {
+              slug: slugFromPath(item.path, folder),
+              path: item.path,
+              filename: item.name,
+              createdAt: dates.createdAt,
+            };
+          }),
+      );
     } catch {
       warn(debug, "source unavailable: listEntries");
       return [];
@@ -180,6 +208,7 @@ export function createSource(options: SourceOptions): Source {
         slug: slugFromPath(path, folder),
         path,
         filename,
+        createdAt: null,
         content: parsed.content,
         frontmatter: parsed.frontmatter,
       };
@@ -190,9 +219,27 @@ export function createSource(options: SourceOptions): Source {
         slug: slugFromPath(path, folder),
         path,
         filename,
+        createdAt: null,
         content: "",
         frontmatter: {},
       };
+    }
+  }
+
+  async function fetchDates(path: string): Promise<{ createdAt: string | null }> {
+    try {
+      const url = commitsUrl(baseUrl, options.owner, options.repo, path, options.ref);
+      const commits = await readJsonArray<GitHubCommit>(await fetchImpl(url, { headers }));
+
+      if (commits.length === 0) {
+        return { createdAt: null };
+      }
+
+      const createdAt = commits[commits.length - 1]?.commit?.author?.date ?? commits[0]?.commit?.author?.date ?? null;
+
+      return { createdAt };
+    } catch {
+      return { createdAt: null };
     }
   }
 

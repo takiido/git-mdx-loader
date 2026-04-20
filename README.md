@@ -44,6 +44,7 @@ const article = await source.getEntry("hello-world");
 - `slug`
 - `path`
 - `filename`
+- `createdAt`
 - `content`
 - `frontmatter`
 - frontmatter parse is simple yaml-like fields only
