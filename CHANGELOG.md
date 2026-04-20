@@ -3,6 +3,8 @@
 ## 0.4.1
 
 - add `RenderContent` for markdown render
+- add `createdAt` to article list entries
+- let `RenderContent` accept render plugins
 
 ## 0.4.0
 

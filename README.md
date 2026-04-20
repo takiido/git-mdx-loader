@@ -57,6 +57,8 @@ import { RenderContent } from "git-mdx-loader";
 <RenderContent content={entry.content} />
 ```
 
+`RenderContent` also accepts `plugins` for remark and rehype plugins.
+
 ## notes
 
 - set `cachecomponents: true` in `next.config.js`
@@ -67,7 +69,6 @@ import { RenderContent } from "git-mdx-loader";
 
 ## debug logs
 
-- `[github-md] listEntries`
 - `[github-md] listEntries`
 - `[github-md] fetch GitHub directory`
 - `[github-md] getEntry:hello-world`
