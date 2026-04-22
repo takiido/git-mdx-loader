@@ -1,5 +1,7 @@
 # git-mdx-loader
 
+![NPM Downloads](https://img.shields.io/npm/d18m/git-mdx-loader)
+
 cache github article list in next.js.
 
 ## use
